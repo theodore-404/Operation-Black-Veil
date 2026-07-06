@@ -1,4 +1,8 @@
 const game = document.getElementById('game');
+const hud = document.getElementById('hud');
+const inventoryHUD = document.getElementById('inventoryHUD');
+const objectiveHUD = document.getElementById('objectiveHUD');
+
 let playerName = "Captain Price";
 let currentScene = "title";
 const rooms = [
@@ -8,10 +12,32 @@ const rooms = [
 ];
 let hasKeycard = false;
 let hasMedkit = false;
+let hasBandage = false;
 const inventory = [];
+
+function updateInventory() {
+    let text = "Inventory\n\n";
+    for (let i = 0; i < inventory.length; i++) {
+        text += "- " + inventory[i] + "\n";
+    }
+    if (inventory.length == 0) {
+        text = "Inventory\n\nEmpty";
+    }
+    inventoryHUD.textContent = text;
+}
+
+function updateObjective() {
+    if (hasKeycard){
+        objectiveHUD.textContent = "Objective\n\n☑ Find a Keycard";
+    }else{
+        objectiveHUD.textContent = "Objective\n\n☐ Find a Keycard";
+    }
+}
 
 function showTitle() {
     currentScene = "title";
+    hud.classList.add("hidden");
+    objectiveHUD.classList.add("hidden");
     game.innerHTML = `
         <h1>Operation Black Veil</h1>
         <button id="startButton">START</button>
@@ -77,6 +103,8 @@ function showEntrance() {
 
 function showMap() {
     currentScene = "map";
+    hud.classList.remove("hidden");
+    objectiveHUD.classList.remove("hidden");
     game.innerHTML = `
         <h2>SITE-09 MAP</h2>
 
@@ -89,9 +117,21 @@ function showMap() {
         <br><br>
 
         <button id="generatorButton">Generator Room</button>
+
+        <br><br>
+
+        <button id="saveButton">SAVE GAME</button>
+
+        <br><br>
+
+        <button id="resetButton">RESET GAME</button>
     `;
 
     document.getElementById('securityButton').addEventListener('click', showSecurity);
+    document.getElementById('medicalButton').addEventListener('click', showMedical);
+    document.getElementById('generatorButton').addEventListener('click', enterGenerator);
+    document.getElementById('saveButton').addEventListener('click', saveGame);
+    document.getElementById('resetButton').addEventListener('click', resetGame);
 }
 
 function showSecurity() {
@@ -99,9 +139,6 @@ function showSecurity() {
     game.innerHTML = `
         <h2>SECURITY OFFICE</h2>
         <p>
-        <p id="inventoryText">
-        Inventory: Empty
-        </p>
         The room is abandoned.
         Dust covers every surface.
         A monitor is still powered on.
@@ -120,18 +157,14 @@ function showSecurity() {
 
 function searchDesk() {
     if(hasKeycard == false) {
-        alert("You found keycard Lv1!");
+        alert("You found Keycard Lv1 and a Flashlight!");
         hasKeycard = true;
+        updateObjective();
         inventory.push("Keycard Lv1");
         inventory.push("Flashlight");
+        updateInventory();
     } else {
         alert("The desk is empty.");
-        const inventoryText = document.getElementById("inventoryText");
-        let text = "Inventory\n\n";
-        for (let i = 0; i < inventory.length; i++) {
-            text += "- " + inventory[i] + "\n";
-        }
-        inventoryText.textContent = text;
     }
 }
 
@@ -140,18 +173,59 @@ function inspectLocker() {
         alert("You found Medkit!");
         hasMedkit = true;
         inventory.push("Medkit");
+        updateInventory();
     } else {
         alert("Locker is empty.");
-        const inventoryText = document.getElementById("inventoryText");
-        let text = "Inventory\n\n";
-        for (let i = 0; i < inventory.length; i++) {
-            text += "- " + inventory[i] + "\n";
-        }
-        inventoryText.textContent = text;
     }
 }
 
-showTitle();
+function showMedical() {
+    currentScene = "medical";
+    game.innerHTML = `
+        <h2>MEDICAL BAY</h2>
+
+
+
+        <button id="searchCabinet">Search Cabinet</button>
+        <br><br>
+        <button id="returnMap">Return to Map</button>
+    `;
+
+    document.getElementById("searchCabinet").addEventListener("click", searchCabinet);
+    document.getElementById("returnMap").addEventListener("click", showMap);
+}
+
+function searchCabinet() {
+    if(hasBandage == false) {
+        alert("You found Bandage!");
+        hasBandage = true;
+        inventory.push("Bandage");
+        updateInventory();
+    } else {
+        alert("Cabinet is empty.");
+    }
+}
+
+function enterGenerator() {
+    if(hasKeycard == false) {
+        alert("ACCESS DENIED\n\nKeycard Lv1 Required.");
+    } else {
+        showGenerator();
+    }
+}
+
+function showGenerator() {
+    currentScene = "generator";
+    game.innerHTML = `
+        <h2>GENERATOR ROOM</h2>
+        <p>
+            Emergency power is offline.
+        </p>
+        <button id="returnMap">Return to Map</button>
+    `;
+
+    document.getElementById("returnMap").addEventListener("click", showMap);
+}
 
 function typeWriter(element, text) {
     element.textContent = '';
@@ -165,4 +239,21 @@ function typeWriter(element, text) {
     }, 40);
 }
 
+function saveGame() {
+    localStorage.setItem("inventory", JSON.stringify(inventory));
+    alert("Game Saved!");
+}
+
+function resetGame() {
+    const confirmReset = confirm("Are you sure you want to reset your progress?");
+    if (confirmReset) {
+        localStorage.clear();
+        location.reload();
+    }
+}
+
 console.log(currentScene);
+
+showTitle();
+updateInventory();
+updateObjective();
