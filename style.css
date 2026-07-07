@@ -18,3 +18,27 @@ button{
 .hidden{
     display:none;
 }
+
+.black-screen {
+    position: fixed;
+    inset: 0;
+    background: black;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    z-index: 9999;
+}
+
+.black-screen.show {
+    opacity: 1;
+}
+
+small{
+    opacity:.6;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink{
+    50%{
+        opacity:.2;
+    }
+}
